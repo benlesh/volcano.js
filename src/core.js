@@ -4,11 +4,11 @@ function LoopContext() {
     var self = this;
     var stopped = false;
 
-    self.stop = function() {
+    self.stop = function () {
         stopped = true;
     }
 
-    self.isStopped = function (){
+    self.isStopped = function () {
         return stopped;
     }
 }
@@ -46,24 +46,24 @@ function isUndefined(o) {
 }
 
 function forEach(o, fn) {
-    if(!o) {
+    if (!o) {
         return;
     }
 
     var loopContext = new LoopContext();
 
-    if(isArray(o)) {
-        for(var i = 0; i < o.length; i++) {
+    if (isArray(o)) {
+        for (var i = 0; i < o.length; i++) {
             fn(o[i], i, o, loopContext);
-            if(loopContext.isStopped()) {
+            if (loopContext.isStopped()) {
                 break;
             }
         }
     } else if (isObject(o)) {
-        for(var key in o) {
-            if(o.hasOwnProperty(key)) {
+        for (var key in o) {
+            if (o.hasOwnProperty(key)) {
                 fn(o[key], key, o, loopContext);
-                if(loopContext.isStopped()) {
+                if (loopContext.isStopped()) {
                     break;
                 }
             }
@@ -72,12 +72,12 @@ function forEach(o, fn) {
 }
 
 function map(o, fn) {
-    if(!o || !isArray(o)) {
+    if (!o || !isArray(o)) {
         return undefined;
     }
 
     var result = [];
-    forEach(o, function(v, k, o, c) {
+    forEach(o, function (v, k, o, c) {
         result.push(fn(v, k, o, c));
     });
 
@@ -87,8 +87,8 @@ function map(o, fn) {
 function first(o, predicate) {
     var result;
 
-    forEach(o, function(v, k, o, c) {
-        if(predicate(v, k, o, c)) {
+    forEach(o, function (v, k, o, c) {
+        if (predicate(v, k, o, c)) {
             result = v;
             c.stop();
         }
@@ -105,11 +105,12 @@ function extend(target) {
     var deep = false;
     var sources;
 
-    if(isUndefined(target)) {
+    if (isUndefined(target)) {
         target = {};
-    };
+    }
+    ;
 
-    if(isBoolean(target)) {
+    if (isBoolean(target)) {
         deep = target;
         target = src;
         sources = slice(arguments, 2);
@@ -117,9 +118,9 @@ function extend(target) {
         sources = slice(arguments, 1);
     }
 
-    forEach(sources, function(source) {
-        forEach(source, function(value, key) {
-            if(deep && isObject(value)) {
+    forEach(sources, function (source) {
+        forEach(source, function (value, key) {
+            if (deep && isObject(value)) {
                 target[key] = target[key] || {}
                 extend(deep, target[key], value);
             } else {
@@ -129,34 +130,41 @@ function extend(target) {
     });
 }
 
-volcano.__namespaces__ = {};
+volcano.__packages__ = {};
 
-function namespace(name, arg, arg2) {
-    var ns = volcano.__namespaces__[name] = volcano.__namespaces__[name] || {};
-    if(arg) {
-        if(isObject(arg)) {
+function package(name, arg, arg2) {
+    var ns = volcano.__packages__[name] = volcano.__packages__[name] || {};
+    if (arg) {
+        if (isObject(arg)) {
             extend(ns, arg);
-        } else if(isString(arg)) {
+        } else if (isString(arg)) {
             ns[arg] = arg2;
-        } else if(isFunction(arg)) {
+        } else if (isFunction(arg)) {
             arg(ns);
         }
     }
     return ns;
 }
 
-function bootstrap() {
-    processNamespaces();
+function bootstrap(startup) {
+    processPackages();
+    volcano.register('$start', startup);
+    var start = volcano.getInjection('$start');
+    if (!isFunction(start.main)) {
+        throw new Error(startup + ' does not have a function main()');
+    }
+    volcano.inject(start.main)();
 }
 
-function processNamespaces() {
-    forEach(volcano.__namespaces__, function(ns, namespace) {
-        forEach(ns, function(o, name, ns) {
-            if(!(o instanceof NamespaceMember)) {
-                var namespaceMember = new NamespaceMember(name, o);
-                ns[name] = namespaceMember;
+function processPackages() {
+    debugger;
+    forEach(volcano.__packages__, function (ns, package) {
+        forEach(ns, function (o, name, ns) {
+            if (!isObject(o) || !(o instanceof packageMember)) {
+                var packageMember = new PackageMember(name, o);
+                ns[name] = packageMember;
             }
-        })
+        });
     });
 }
 
@@ -165,48 +173,43 @@ var CLASSNAME_REGEXP = /^[A-Z][A-Za-z0-9]+$/;
 var SINGLETONNAME_REGEXP = /^[a-z][A-Za-z-0-9]Singleton$/;
 var VARNAME_REGEXP = /^[a-z][A-Za-z-0-9]$/;
 
-function NamespaceMember(name, o) {
+function PackageMember(name, o) {
     var self = this;
     self.name = name;
     self.original = o;
 
-    if(CONSTNAME_REGEXP.test(name)) {
+    if (CONSTNAME_REGEXP.test(name)) {
         self.type = 'const';
         self.value = o;
-    }
-
-    if(CLASSNAME_REGEXP.test(name)) {
+    } else if (CLASSNAME_REGEXP.test(name)) {
         self.type = 'class';
 
-        if(isFunction(o)) {
+        if (isFunction(o)) {
             self.ctor = o;
         } else if (isArray(o)) {
             self.dependencies = o.slice(0, o.length - 2);
             self.ctor = o[o.length - 1];
         }
-
-        throw new Error('invalid class declaration');
-    }
-
-    if(SINGLETONNAME_REGEXP.test(name)) {
+        if (!self.ctor) {
+            throw new Error('invalid class declaration');
+        }
+    } else if (SINGLETONNAME_REGEXP.test(name)) {
         self.type = 'singleton';
         var x = o;
-        if(isArray(o)) {
+        if (isArray(o)) {
             self.dependencies = o.slice(0, o.length - 2);
             x = o[o.length - 1];
         }
 
-        if(isFunction(x)) {
+        if (isFunction(x)) {
             self.init = x;
-        } else if(isObject(x)){
+        } else if (isObject(x)) {
             self.instance = x;
         }
-    }
-
-    if(VARNAME_REGEXP.text(name)) {
+    } else if (VARNAME_REGEXP.text(name)) {
         self.type = 'var';
 
-        if(isArray(o)) {
+        if (isArray(o)) {
             self.dependencies = o.slice(0, o.length - 2);
             self.init = o[o.length - 1];
         } else {
@@ -229,7 +232,7 @@ extend(volcano, {
     isString: isString,
     slice: slice,
     objectString: objectString,
-    namespace: namespace,
+    package: package,
     bootstrap: bootstrap
 });
 

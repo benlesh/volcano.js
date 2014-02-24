@@ -4,13 +4,17 @@ var __iocState__ = volcano.__iocState__ = {
     chain: null
 }
 
-function register(iocKey, fullName) {
+function parseFullName(fullName) {
     var parts = fullName.split('.');
-    volcano.__iocContainer__[icoKey] = {
+    return {
         fullName: fullName,
-        namespace: parts.slice(0, parts.length - 2).join('.'),
+        package: parts.slice(0, parts.length - 1).join('.'),
         type: parts[parts.length - 1]
-    };
+    }
+}
+
+function register(iocKey, fullName) {
+    volcano.__iocContainer__[iocKey] = parseFullName(fullName);
     __iocState__.dirty = true;
 }
 
@@ -27,34 +31,34 @@ function inject() {
 }
 
 function getInjection(iocKey) {
-    var namespaceMember, resolve;
-    var iocManifest = volcano.__iocContainer__[icoKey];
+    var resolve;
+    var iocManifest = volcano.__iocContainer__[iocKey];
+    var packageMember = volcano.__packages__[iocManifest.package][iocManifest.type];
     if (!iocManifest.value) {
-        namespaceMember = volcano.__namespaces__[iocManifest.namespace][icoManifest.type];
-        switch(namespaceMember.type) {
+        switch(packageMember.type) {
             case 'var':
-                if(namespaceMember.dependencies) {
-                    resolve = namespaceMember.dependencies.concat([init]);
+                if(packageMember.dependencies) {
+                    resolve = packageMember.dependencies.concat([init]);
                     return inject(resolve)();
                 }
-                return namespaceMember.value;
+                return packageMember.value;
             case 'const':
-                return namespaceMember.value;
+                return packageMember.value;
             case 'singleton':
-                if(!namespaceMember.value) {
-                    var init = namespaceMember.init;
-                    if(namespaceMember.dependencies) {
-                        resolve = namespaceMember.dependencies.concat([init]);
-                        namespaceMember.value = inject(resolve)();
+                if(!packageMember.value) {
+                    var init = packageMember.init;
+                    if(packageMember.dependencies) {
+                        resolve = packageMember.dependencies.concat([init]);
+                        packageMember.value = inject(resolve)();
                     } else {
-                        namespaceMember.value = init();
+                        packageMember.value = init();
                     }
                 }
-                return namespaceMember.value;
+                return packageMember.value;
             case 'class':
-                var ctor = namespaceMember.ctor;
-                if(namespaceMember.dependencies) {
-                    resolve = namespaceMember.dependencies.concat([ctor]);
+                var ctor = packageMember.ctor;
+                if(packageMember.dependencies) {
+                    resolve = packageMember.dependencies.concat([ctor]);
                     ctor = inject(resolve);
                 }
                 return new ctor();
@@ -66,16 +70,16 @@ function getInjection(iocKey) {
 function updateDependencies() {
     var dc = new DependencyChain();
 
-    forEach(__iocContainer__, function(manifest, iocKey) {
-       dc.add(iocKey, manifest, getDependencies(manifest.namespace, manifest.type));
+    forEach(volcano.__iocContainer__, function(manifest, iocKey) {
+       dc.add(iocKey, manifest, getDependencies(manifest.package, manifest.type));
     });
 
     dc.prioritized();
     __iocState__.chain = dc;
 }
 
-function getDependencies(namespace, typeName) {
-    return volcano.__namespaces__[namespace][typeName].dependencies;
+function getDependencies(package, typeName) {
+    return volcano.__packages__[package][typeName].dependencies;
 }
 
 extend(volcano, {

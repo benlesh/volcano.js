@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Basic Hello World</title>
+</head>
+<body>
+    <script src="../src/core.js"></script>
+    <script src="../src/DependencyChain.js"></script>
+    <script src="../src/ioc.js"></script>
+    <script>
+        volcano.package('helloworld', {
+            SayHello: function() {
+                this.main = function (){
+                  window.alert('hello world!');
+                };
+            }
+        });
+
+        volcano.bootstrap('helloworld.SayHello');
+    </script>
+</body>
+</html>
