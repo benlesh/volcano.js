@@ -177,7 +177,7 @@ function inject() {
     if(__iocState__.dirty) {
         updateDependencies();
     }
-    var iocKeys = slice(arguments, 0, arguments.length - 2);
+    var iocKeys = slice(arguments, 0, arguments.length - 1);
     var fn = arguments[arguments.length - 1];
     window.console.log(iocKeys, fn);
     var injections = map(iocKeys, getInjection);
@@ -226,7 +226,10 @@ function getInjection(iocKey) {
 function updateDependencies() {
     var dc = new DependencyChain();
 
+    window.console.log('updateDependencies');
+
     forEach(volcano.__iocContainer__, function(manifest, iocKey) {
+        window.console.log('ud: ', manifest, iocKey);
         dc.add(iocKey, manifest, getDependencies(manifest.namespace, manifest.type));
     });
 
@@ -337,6 +340,8 @@ extend(volcano, {
 });
 
 window.volcano = window.$v = volcano;
+
+var volcanoNamespace = namespace('volcano');
 // Tarjan algorithm implementation based on
 // https://gist.github.com/chadhutchins/1440602
 
@@ -489,4 +494,14 @@ function DependencyChain() {
         };
     }
 }
+volcanoNamespace.ioc = {
+    register: register,
+    inject: inject,
+    getInjection: getInjection
+};
+
+register('ioc', 'volcano.ioc');
+volcanoNamespace.window = window;
+register('window', 'volcano.window');
+//test
 }(window));

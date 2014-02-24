@@ -11,7 +11,8 @@ module.exports = function (grunt) {
     var srcFiles = [
         'src/core.js',
         'src/DependencyChain.js',
-        'src/ico.js'
+        'src/ico.js',
+        'src/volcano/**/*.js'
     ];
 
     grunt.initConfig({
