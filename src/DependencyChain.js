@@ -50,11 +50,9 @@ function DependencyChain() {
             //TODO: add more detail.
         }
 
-        var result = map(_sccs, function (scc) {
-            return scc[0]
+        return map(_sccs, function (scc) {
+            return scc[0];
         });
-
-        return result;
     };
 
     function Graph(vertices) {

@@ -4,19 +4,17 @@
     <title>Basic Hello World</title>
 </head>
 <body>
-    <script src="../src/core.js"></script>
-    <script src="../src/DependencyChain.js"></script>
-    <script src="../src/ioc.js"></script>
+    <script src="../dev/volcano-dev.min.js"></script>
     <script>
-        volcano.package('helloworld', {
-            SayHello: function() {
-                this.main = function (){
-                  window.alert('hello world!');
-                };
+        $v.namespace('helloworld', {
+            app: {
+                main: ['ioc', function(ioc) {
+                    window.console.log('Hello World!');
+                }]
             }
         });
 
-        volcano.bootstrap('helloworld.SayHello');
+        $v.bootstrap('helloworld.app');
     </script>
 </body>
 </html>

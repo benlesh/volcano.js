@@ -56,7 +56,7 @@ describe('$v.namespace', function () {
             it('should extend the existing namespace', function () {
                 expect($v.namespace('ns1')).toEqual({ FOO: 'bar', FIZZ: 'buzz' });
             });
-        })
+        });
     });
 
     describe('$v.namespace(str, "FOO", 123)', function () {
@@ -81,6 +81,6 @@ describe('$v.namespace', function () {
 
         it('shoutoBeld pass the namespace to the function', function () {
             expect(spy).toHaveBeenCalledWith($v.namespace('ns1'));
-        })
+        });
     });
 });
