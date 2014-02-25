@@ -17,6 +17,14 @@ function slice(o, start, end) {
     return [].slice.call(o, start, end);
 }
 
+function last(arr) {
+    return arr[arr.length - 1];
+}
+
+function exceptLast(arr) {
+    return arr.slice(0, arr.length - 1);
+}
+
 function isBoolean(o) {
     return typeof o === 'boolean';
 }
@@ -157,8 +165,8 @@ function parseFullName(fullName) {
     var parts = fullName.split('.');
     return {
         fullName: fullName,
-        namespace: parts.slice(0, parts.length - 1).join('.'),
-        type: parts[parts.length - 1]
+        namespace: exceptLast(parts).join('.'),
+        type: last(parts)
     };
 }
 
@@ -174,9 +182,9 @@ function inject() {
     if(__iocState__.dirty) {
         updateDependencies();
     }
-    var iocKeys = slice(arguments, 0, arguments.length - 1);
-    var fn = arguments[arguments.length - 1];
-    window.console.log(iocKeys, fn);
+    var args = slice(arguments);
+    var iocKeys = exceptLast(args);
+    var fn = last(args);
     var injections = map(iocKeys, getInjection);
     return function() {
         return fn.apply(this, injections);
@@ -267,11 +275,40 @@ var CONSTNAME_REGEXP = /^[A-Z][A-Z_0-9]?$/;
 var CLASSNAME_REGEXP = /^[A-Z][A-Za-z0-9]+$/;
 var SINGLETONNAME_REGEXP = /^[a-z][A-Za-z-0-9]*Singleton$/;
 var VARNAME_REGEXP = /^[a-z][A-Za-z-0-9]*$/;
+var ATTR_REGEXP = /^\s*(\{.*\})\s*(.*)$/;
+var NAME_REGEXP = /^\s*((private|protected)\s*|(_|$))([A-Za-z0-9_$].*)$/;
 
 function NamespaceMember(name, o) {
     var self = this;
     self.name = name;
     self.original = o;
+
+    //split attrs off
+    ATTR_REGEXP.lastIndex = 0;
+    var attrParts = ATTR_REGEXP.exec(name);
+    if(attrParts) {
+        try {
+        self.attrs = JSON.parse(attrsParts[1]);
+        } catch(attrParseErr) {
+            throw new Error("Error parsing attrs: " + attrParseErr);
+        }
+
+        name = attrsParts[2];
+    }
+
+    // check for visibility modifiers
+    NAME_REGEXP.lastIndex = 0;
+    var nameParts = NAME_REGEXP.exec(name);
+    if(nameParts) {
+        if(nameParts[2] === 'private' || nameParts[3] === '_') {
+            self.visibility = 'private';
+        } else if(nameParts[2] === 'protected' || nameParts[3] === '_') {
+            self.visibility = 'protected';
+        } else {
+            self.visibility = 'public';
+        }
+        name = nameParts[4];
+    }
 
     if (CONSTNAME_REGEXP.test(name)) {
         self.type = 'const';
@@ -282,8 +319,8 @@ function NamespaceMember(name, o) {
         if (isFunction(o)) {
             self.ctor = o;
         } else if (isArray(o)) {
-            self.dependencies = o.slice(0, o.length - 2);
-            self.ctor = o[o.length - 1];
+            self.dependencies = exceptLast(o);
+            self.ctor = last(o);
         }
         if (!self.ctor) {
             throw new Error('invalid class declaration');
@@ -292,8 +329,8 @@ function NamespaceMember(name, o) {
         self.type = 'singleton';
         var x = o;
         if (isArray(o)) {
-            self.dependencies = o.slice(0, o.length - 2);
-            x = o[o.length - 1];
+            self.dependencies = exceptLast(o);
+            x = last(o);
         }
 
         if (isFunction(x)) {
@@ -305,8 +342,8 @@ function NamespaceMember(name, o) {
         self.type = 'var';
 
         if (isArray(o)) {
-            self.dependencies = o.slice(0, o.length - 2);
-            self.init = o[o.length - 1];
+            self.dependencies = exceptLast(o);
+            self.init = last(o);
         } else {
             self.value = o;
         }

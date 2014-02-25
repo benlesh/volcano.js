@@ -1,0 +1,29 @@
+{
+  "name": "volcano.js",
+  "version": "0.0.0",
+  "description": "An application development platform for JavaScript",
+  "main": "Gruntfile.js",
+  "directories": {
+    "example": "examples",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://blesh@github.com/blesh/volcano.js.git"
+  },
+  "author": "Ben Lesh <ben@benlesh.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/blesh/volcano.js/issues"
+  },
+  "devDependencies": {
+    "grunt": "~0.4.2",
+    "grunt-contrib-jshint": "~0.8.0",
+    "grunt-contrib-uglify": "~0.3.2",
+    "grunt-contrib-concat": "~0.3.0",
+    "grunt-contrib-watch": "~0.5.3"
+  }
+}
