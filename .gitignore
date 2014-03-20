@@ -1,5 +1,4 @@
-node_modules/
-bower_components/
 .idea/
-.grunt/
-dev/
+bower_components/
+node_modules/
+js/
