@@ -150,3 +150,5 @@ function DependencyChain() {
         };
     }
 }
+
+volcano.core.DependencyChain = DependencyChain;

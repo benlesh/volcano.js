@@ -1,61 +1,40 @@
-module.exports = function (grunt) {
-    'use strict';
+module.exports = function(grunt) {
+	grunt.initConfig({
+		uglify: {
+			
+			max: {
+				options: {
+					beautify: true,
+					sourceMap: true,
+					mangle: false,
+					enclose: {
+						'window': 'window'
+					}
+				},
+				src: ['src/core.js', 'src/**/*.js'],
+				dest: 'dist/volcano.js'
+			},
+			min: {
+				options: {
+					sourceMap: true,
+					enclose: {
+						'window': 'window'
+					}
+				},
+				src: ['src/core.js', 'src/**/*.js'],
+				dest: 'dist/volcano.min.js'
+			}
+		},
+		watch: {
+			js: {
+				files: ['src/**/*.js'],
+				tasks: ['uglify']
+			}
+		}
+	});
 
-    function wrap(fileArray) {
-        var copy = fileArray.slice(0);
-        copy.unshift('src/intro.txt');
-        copy.push('src/outro.txt');
-        return copy;
-    }
+	grunt.loadNpmTasks('grunt-contrib-uglify');
+	grunt.loadNpmTasks('grunt-contrib-watch');
 
-    var srcFiles = [
-        'src/core.js',
-        'src/DependencyChain.js',
-        'src/ico.js',
-        'src/volcano/**/*.js'
-    ];
-
-    grunt.initConfig({
-        jshint: {
-            all: ['src/**/*.js', 'test/**/*.spec.js']
-        },
-        concat: {
-          all: {
-              src: wrap(srcFiles),
-              dest: 'dist/volcano.js'
-          }
-        },
-        uglify: {
-            min: {
-                options: {
-                    sourceMap: true
-                },
-                files: {
-                    'dist/volcano.min.js': 'dist/volcano.js'
-                }
-            },
-            dev: {
-                options: {
-                    sourceMap: true
-                },
-                files: {
-                    'dev/volcano-dev.min.js': srcFiles
-                }
-            }
-        },
-        watch: {
-            src: {
-                files: 'src/**/*.js',
-                tasks: ['concat', 'uglify:min', 'uglify:dev']
-            }
-        }
-    });
-
-    grunt.loadNpmTasks('grunt-contrib-jshint');
-    grunt.loadNpmTasks('grunt-contrib-uglify');
-    grunt.loadNpmTasks('grunt-contrib-concat');
-    grunt.loadNpmTasks('grunt-contrib-watch');
-
-    grunt.registerTask('default', ['jshint', 'concat', 'uglify']);
-    grunt.registerTask('dev', ['watch']);
+	grunt.registerTask('default', ['uglify']);
 }
