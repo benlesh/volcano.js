@@ -1,15 +1,15 @@
 function LoopContext() {
-	var broken = false;
+    var stopped = false;
 
-	this.break = function () {
-		broken = true;
-	};
+    this.stop = function () {
+        stopped = true;
+    };
 
-	this.broken = function (){
-		return broken;
-	};
+    this.stopped = function () {
+        return stopped;
+    };
 
-	this.reset = function () {
-		broken = false;
-	};
+    this.reset = function () {
+        stopped = false;
+    };
 }
