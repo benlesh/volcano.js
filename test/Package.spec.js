@@ -32,17 +32,4 @@ describe('package creation and handling', function (){
 		});
 	});
 
-	describe('package.update()', function (){
-		it('should update the dependencies', function (){
-			var pkg = $v.package('testPkg', {
-				item1: ['item2', function (item2) { }],
-				item2: ['item3', function (item3) { }],
-				item3: function() {}
-			});
-			pkg.update();
-
-			expect(pkg.__orderedDependencies).toBe('stuff');
-		});
-	});
-
 });
